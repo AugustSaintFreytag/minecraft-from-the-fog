@@ -218,32 +218,30 @@ public class ServerEvents implements
         var spawnChanceMul = FogMod.CONFIG.spawning.spawnChanceScalesWithPlayerCount ? world.getPlayers(VALID_PLAYER_PREDICATE).size() : 1;
 
         if (world.getRegistryKey() == ModDimensions.ENSHROUDED_LEVEL_KEY) {
-            spawnChanceMul *= 3;
+            spawnChanceMul *= 2.5;
         }
 
         var spawnChance = FogMod.CONFIG.spawning.spawnChance * spawnChanceMul;
 
         if (WorldHelper.isBloodMoon(world)) {
-            spawnChance *= 4;
+            spawnChance *= 2.5;
         }
 
         if (WorldHelper.isSuperBloodMoon(world)) {
-            spawnChance = 2;
+            spawnChance = 1.0f;
         }
 
-        var ambientChance = FogMod.CONFIG.spawning.fakeSpawnChance;
-
-        var spawnRandom = RandomNum.nextFloat();
-        var ambientRandom = RandomNum.nextFloat();
-
-        if (spawnRandom < spawnChance) {
-            if (ambientRandom < ambientChance) {
-                playCreepySoundAtRandomLocation(world);
+        if (RandomNum.nextFloat() < spawnChance) {
+            if (RandomNum.nextFloat() < FogMod.CONFIG.spawning.fakeSpawnChance) {
+                if (RandomNum.nextFloat() < 0.5) {
+                    playCreepySoundAtRandomLocation(world);
+                }
             } else {
                 spawnEntityAtRandomLocation(world,ModEntities.THE_MAN);
             }
         }
 
+        // What the fuck is this bullshit
         WorldComponent.get(world).setSpawnAttemptTicks(TimeHelper.secToTick(FogMod.CONFIG.spawning.timeBetweenSpawnAttempts));
     }
 
