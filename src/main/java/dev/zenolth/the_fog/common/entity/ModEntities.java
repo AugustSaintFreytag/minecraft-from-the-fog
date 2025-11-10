@@ -50,12 +50,10 @@ public class ModEntities {
     );
 
     public static void register() {
-        Console.writeln("Registering Entities");
         FabricDefaultAttributeRegistry.register(THE_MAN, TheManEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(THE_MAN_HALLUCINATION, TheManEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(THE_MAN_PARANOIA, TheManEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(MIMIC,MimicEntity.createMimicAttributes());
-        Console.writeln("Registered Entities");
     }
 }
 
