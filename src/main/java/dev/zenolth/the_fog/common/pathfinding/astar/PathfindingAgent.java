@@ -1,5 +1,6 @@
 package dev.zenolth.the_fog.common.pathfinding.astar;
 
+import dev.zenolth.the_fog.common.FogMod;
 import dev.zenolth.the_fog.common.util.Console;
 import dev.zenolth.the_fog.common.util.Timer;
 import net.minecraft.block.BlockState;
@@ -38,7 +39,7 @@ public class PathfindingAgent<E extends MobEntity> {
     private final HashMap<BlockPos,BlockPos> cameFrom = new HashMap<>();
 
     private final HashMap<BlockPos, BlockState> debug = new HashMap<>();
-    private final Timer debugTimer = new Timer(10,true,this::debugBlocksHaha);
+    private final Timer debugTimer = new Timer(10,true,this::placeDebugBlocks);
 
     private int pathLength = 0;
     private int pathLengthThreshold = 0;
@@ -203,10 +204,13 @@ public class PathfindingAgent<E extends MobEntity> {
         this.entity.getMoveControl().moveTo(nextPos.x,nextPos.y,nextPos.z,this.speed);
     }
 
-    private void debugBlocksHaha() {
+    private void placeDebugBlocks() {
+        if (!FogMod.DEBUG) return;
         if (this.latestPath == null) return;
+        
         this.debug.forEach(this.world::setBlockState);
         this.debug.clear();
+
         for (var pos : this.latestPath) {
             this.debug.put(pos,this.world.getBlockState(pos));
             this.world.setBlockState(pos,Blocks.GLASS.getDefaultState());
