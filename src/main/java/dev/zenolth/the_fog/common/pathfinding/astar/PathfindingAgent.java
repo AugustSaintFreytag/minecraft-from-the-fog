@@ -96,6 +96,7 @@ public class PathfindingAgent<E extends MobEntity> {
 
     private void pathComputeTick() {
         if (this.queue.isEmpty()) return;
+        
         if (!this.computingPath) {
             this.computingPath = true;
             this.frontier.clear();
@@ -118,40 +119,46 @@ public class PathfindingAgent<E extends MobEntity> {
         var current = this.frontier.poll();
 
         if (current == null) {
-            Console.writeln("Frontier empty.");
+            // Console.writeln("Frontier empty.");
             this.computingPath = false;
             return;
         }
+        var currentPos = current.getLeft().toImmutable();
 
-        Console.writeln(String.format("Pathfinding %s.",this.pathLength));
+        // Console.writeln(String.format("Pathfinding %s.",this.pathLength));
 
         this.pathLength++;
 
-        this.reachedTarget = current.getLeft().equals(this.currentRequest.targetPos());
+        this.reachedTarget = currentPos.equals(this.currentRequest.targetPos());
 
         if (this.reachedTarget || this.pathLength >= this.pathLengthThreshold) {
-            if (!this.reachedTarget) {
-                Console.writeln("Couldn't reach target.");
-            } else {
-                Console.writeln("Found path.");
-            }
-            this.latestPath = this.reconstructPath(current.getLeft());
+            // if (!this.reachedTarget) {
+            //     Console.writeln("Couldn't reach target.");
+            // } else {
+            //     Console.writeln("Found path.");
+            // }
+
+            this.latestPath = this.reconstructPath(currentPos);
             this.computingPath = false;
             return;
         }
 
-        for (var next : BlockPos.iterateOutwards(current.getLeft(),1,1,1)) {
-            if (this.getNodeType(next) == NodeType.BLOCKED) continue;
+        var currentCost = this.costs.get(currentPos);
+        if (currentCost == null) {
+            // Console.writeln("Current node missing cost, aborting path computation.");
+            this.computingPath = false;
+            return;
+        }
 
-            var newCost = this.costs.get(current.getLeft()) + this.getCost(next);
-            if (!this.costs.containsKey(next) || newCost < this.costs.getOrDefault(next,Integer.MAX_VALUE)) {
-                if (this.costs.containsKey(next)) {
-                    this.costs.replace(next,newCost);
-                } else {
-                    this.costs.put(next,newCost);
-                }
-                this.frontier.add(new Pair<>(next,newCost + this.getHeuristic(next)));
-                this.cameFrom.put(next,current.getLeft());
+        for (var next : BlockPos.iterateOutwards(currentPos,1,1,1)) {
+            var nextPos = next.toImmutable();
+            if (this.getNodeType(nextPos) == NodeType.BLOCKED) continue;
+
+            var newCost = currentCost + this.getCost(nextPos);
+            if (!this.costs.containsKey(nextPos) || newCost < this.costs.getOrDefault(nextPos,Integer.MAX_VALUE)) {
+                this.costs.put(nextPos,newCost);
+                this.frontier.add(new Pair<>(nextPos,newCost + this.getHeuristic(nextPos)));
+                this.cameFrom.put(nextPos,currentPos);
             }
         }
     }
