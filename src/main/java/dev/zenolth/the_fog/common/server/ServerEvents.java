@@ -48,7 +48,7 @@ public class ServerEvents implements
     private static ServerEvents INSTANCE;
 
     public static final long CHECK_DAYS_TICKS = 40;
-    public static final float MAN_CREEPY_VOLUME = 5f;
+    public static final float MAN_CREEPY_VOLUME = 2.5f;
 
     public static final Predicate<? super PlayerEntity> VALID_PLAYER_PREDICATE = player -> player.isAlive() && !player.isSpectator() && !player.isCreative() && TheManEntity.canAttack(player,player.getWorld());
 
@@ -92,7 +92,9 @@ public class ServerEvents implements
         }
         var spawnPosition = WorldHelper.getRandomSpawnBehindDirection(world,player.getPos(), GeometryHelper.calculateDirection(0,player.getYaw(1.0f)));
         var entity = entityType.create(world);
+
         if (entity == null) return;
+        
         if (entity.canSpawn(world)) {
             entity.setPosition(spawnPosition);
             entity.setTarget(player);
@@ -119,9 +121,11 @@ public class ServerEvents implements
 
     public static void playCreepySoundAtRandomLocation(ServerWorld world) {
         var player = getRandomAlivePlayer(world);
+        
         if (player == null) {
             return;
         }
+
         var soundPosition = WorldHelper.getRandomSpawnBehindDirection(world,player.getPos(), GeometryHelper.calculateDirection(0,player.getYaw(1.0f)));
         playCreepySound(world,soundPosition.getX(),soundPosition.getY(),soundPosition.getZ());
     }
@@ -186,11 +190,7 @@ public class ServerEvents implements
             return;
         }
 
-        if (!TheManEntity.isInAllowedDimension(world)) {
-            return;
-        }
-
-        if (WorldHelper.isDay(world) && !FogMod.CONFIG.spawning.spawnInDay) {
+        if (!WorldHelper.canSpawnInWorld(world)) {
             return;
         }
 
@@ -218,36 +218,30 @@ public class ServerEvents implements
         var spawnChanceMul = FogMod.CONFIG.spawning.spawnChanceScalesWithPlayerCount ? world.getPlayers(VALID_PLAYER_PREDICATE).size() : 1;
 
         if (world.getRegistryKey() == ModDimensions.ENSHROUDED_LEVEL_KEY) {
-            spawnChanceMul *= 3;
+            spawnChanceMul *= 2.5;
         }
 
         var spawnChance = FogMod.CONFIG.spawning.spawnChance * spawnChanceMul;
 
-        if (FogMod.CONFIG.spawning.spawnInDay && world.getRegistryKey() == World.OVERWORLD && WorldHelper.isDay(world)) {
-            spawnChance /= 2.0f;
-        }
-
         if (WorldHelper.isBloodMoon(world)) {
-            spawnChance *= 4;
+            spawnChance *= 2.5;
         }
 
         if (WorldHelper.isSuperBloodMoon(world)) {
-            spawnChance = 2;
+            spawnChance = 1.0f;
         }
 
-        var ambientChance = FogMod.CONFIG.spawning.fakeSpawnChance;
-
-        var spawnRandom = RandomNum.nextFloat();
-        var ambientRandom = RandomNum.nextFloat();
-
-        if (spawnRandom < spawnChance) {
-            if (ambientRandom < ambientChance) {
-                playCreepySoundAtRandomLocation(world);
+        if (RandomNum.nextFloat() < spawnChance) {
+            if (RandomNum.nextFloat() < FogMod.CONFIG.spawning.fakeSpawnChance) {
+                if (RandomNum.nextFloat() < 0.5) {
+                    playCreepySoundAtRandomLocation(world);
+                }
             } else {
                 spawnEntityAtRandomLocation(world,ModEntities.THE_MAN);
             }
         }
 
+        // What the fuck is this bullshit
         WorldComponent.get(world).setSpawnAttemptTicks(TimeHelper.secToTick(FogMod.CONFIG.spawning.timeBetweenSpawnAttempts));
     }
 

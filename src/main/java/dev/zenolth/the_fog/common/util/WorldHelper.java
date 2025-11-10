@@ -3,10 +3,13 @@ package dev.zenolth.the_fog.common.util;
 import dev.zenolth.the_fog.common.FogMod;
 import dev.zenolth.the_fog.common.block.ErebusLanternBlock;
 import dev.zenolth.the_fog.common.predicate.TheManPredicates;
+import dev.zenolth.the_fog.common.world.dimension.ModDimensions;
 import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBiomeTags;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.font.UnihexFont.Dimensions;
 import net.minecraft.entity.Entity;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -17,6 +20,10 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldView;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.dimension.DimensionTypeRegistrar;
+import net.minecraft.world.dimension.DimensionTypes;
+
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -28,12 +35,20 @@ public class WorldHelper {
     public static Predicate<BlockPos> ANY_BLOCK = (pos) -> true;
 
     public static boolean isDay(World world) {
-        world.calculateAmbientDarkness();
-        return world.getAmbientDarkness() < 4;
+        float skyAngle = world.getSkyAngle(1.0F);
+        return skyAngle < 0.3F || skyAngle > 0.7F;
     }
 
-    public static boolean isNight(World world) {
-        return !isDay(world);
+    public static boolean canSpawnInWorld(World world) {
+        if (!FogMod.CONFIG.spawning.spawnInDay && isDay(world)) {
+            return false;
+        }
+
+        if (world.getRegistryKey() != World.OVERWORLD && world.getRegistryKey() != ModDimensions.ENSHROUDED_LEVEL_KEY) {
+            return false;
+        }
+
+        return true;
     }
 
     public static boolean isEnhancedCelestialsPresent() {

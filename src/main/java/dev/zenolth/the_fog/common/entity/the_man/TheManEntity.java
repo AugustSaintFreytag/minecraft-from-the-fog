@@ -3,6 +3,7 @@ package dev.zenolth.the_fog.common.entity.the_man;
 import dev.zenolth.the_fog.common.FogMod;
 import dev.zenolth.the_fog.common.animation.TheManAnimations;
 import dev.zenolth.the_fog.common.components.WorldComponent;
+import dev.zenolth.the_fog.common.config.ModConfig;
 import dev.zenolth.the_fog.common.damage_type.ModDamageTypes;
 import dev.zenolth.the_fog.common.data_tracker.TrackingData;
 import dev.zenolth.the_fog.common.entity.ModEntities;
@@ -186,7 +187,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         this.state = new TrackingData<>(this,STATE,TheManState.STARE.ordinal());
 
         this.attackTimer = new Timer(TimeHelper.secToTick(this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)),true,this::attemptAttack);
-        this.aliveTimer = new Timer(TimeHelper.secToTick(RandomNum.next(30,120)),this::despawn);
+        this.aliveTimer = new Timer(TimeHelper.secToTick(RandomNum.next(FogMod.CONFIG.behavior.minAliveTime, FogMod.CONFIG.behavior.maxAliveTime)),this::despawn);
         this.hitboxUpdateTimer = new Timer(10,true,this::updateHitbox);
         this.targetDetectTimer = new Timer(5,true,this::updateTarget);
         this.farAwayTimer = new Timer(TOO_FAR_AWAY_TICKS,this::teleportBehindTarget);
@@ -223,7 +224,6 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
         if (this.isReal()) {
             WorldComponent.get(world).setTheManId(this.getId());
-
             var nbtCompound = this.writeNbt(new NbtCompound());
 
             if (nbtCompound.contains(STATE_NBT_KEY)) {
@@ -237,13 +237,10 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
                         this.setState(TheManState.STALK);
                     }
                 } else {
-                    switch (RandomNum.next(0, 2)) {
-                        case 0:
-                            this.setState(TheManState.STARE);
-                            break;
-                        case 1:
-                            this.setState(TheManState.STALK);
-                            break;
+                    if (RandomNum.nextDouble() > 0.25) {
+                        this.setState(TheManState.STARE);
+                    } else {
+                        this.setState(TheManState.STALK);
                     }
                 }
             }
@@ -313,6 +310,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         if (this.getState() == TheManState.CHASE) {
             return;
         }
+
         this.setState(TheManState.CHASE);
         this.playAlarmSound();
         TheManUtils.doLightning(this.getServerWorld(),this);
@@ -561,14 +559,6 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         return !(TheManUtils.manExists(serverWorld) || TheManUtils.hallucinationsExists(serverWorld));
     }
 
-    public static boolean isInAllowedDimension(World world) {
-        if (world.isClient()) {
-            return world.getRegistryKey() == World.OVERWORLD || world.getRegistryKey() == ModDimensions.ENSHROUDED_LEVEL_KEY;
-        }
-        return true;
-        //return FogMod.CONFIG.allowedDimensions.contains(world.getRegistryKey().getValue().toString()) || world.getRegistryKey() == ModDimensions.ENSHROUDED_LEVEL_KEY;
-    }
-
     @Override
     public boolean canSpawn(WorldAccess world, SpawnReason spawnReason) {
         return this.canSpawn(world);
@@ -611,9 +601,10 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
     @Override
     protected void dropInventory() {
-        if ((WorldHelper.isDay(this.getWorld()) && !FogMod.CONFIG.spawning.spawnInDay) || !this.isReal()) {
+        if (!WorldHelper.canSpawnInWorld(this.getWorld()) || !this.isReal()) {
             return;
         }
+
         this.dropStack(new ItemStack(Items.WITHER_ROSE,RandomNum.next(1,6)));
 
         if (this.getKilledCount() < 2) {
@@ -727,8 +718,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
             return true;
         }
 
-        if (WorldHelper.isNight(this.getWorld()) || FogMod.CONFIG.spawning.spawnInDay) {
-
+        if (WorldHelper.canSpawnInWorld(getWorld())) {
             Entity attacker = source.getAttacker();
 
             if (attacker instanceof LivingEntity livingEntity && !livingEntity.getMainHandStack().isOf(ModItems.CLAWS) && this.isReal()) {
@@ -991,6 +981,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
             this.despawn();
             return false;
         }
+        
         this.playAttackSound();
         this.playSlashSound();
 
@@ -1238,14 +1229,15 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         if (this.isAiDisabled()) return;
 
         this.pathfindingAgent.tick();
-
         this.attackTimer.tick();
         this.aliveTimer.tick();
+
         if (this.getState() == TheManState.CHASE && !WorldHelper.isBloodMoon(serverWorld) && !WorldHelper.isSuperBloodMoon(serverWorld)) {
             this.aliveTimer.resume();
         } else {
             this.aliveTimer.pause();
         }
+        
         this.hitboxUpdateTimer.tick();
         this.targetDetectTimer.tick();
         this.farAwayTimer.tick();
@@ -1253,6 +1245,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
         var oldSpeed = this.getAttributeBaseValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         var newSpeed = FogMod.CONFIG.statusEffects.giveSpeed ? SPEED : SPEED_NO_STATUS_EFFECT;
+        
         if (oldSpeed != newSpeed) {
             Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(newSpeed);
         }
@@ -1280,7 +1273,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
             this.setHealth(this.getHealth() - 4f);
         }
 
-        if (WorldHelper.isDay(serverWorld) && !FogMod.CONFIG.spawning.spawnInDay) {
+        if (!WorldHelper.canSpawnInWorld(serverWorld)) {
             this.despawn();
             return;
         }

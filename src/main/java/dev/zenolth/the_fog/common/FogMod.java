@@ -39,7 +39,7 @@ public class FogMod implements ModInitializer {
 	public static final String MOD_NAME = "Man From The Fog Reimagined";
 	public static final String MOD_ID = "the_fog_is_coming";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
-	public static boolean DEBUG = true; // FIXME: Make sure to set this to false when commiting, or else The Man will be highlighted, and we don't want that, don't we?
+	public static boolean DEBUG = false; // FIXME: Make sure to set this to false when commiting, or else The Man will be highlighted, and we don't want that, don't we?
 
 	public static ModConfig CONFIG = ConfigApiJava.registerAndLoadConfig(ModConfig::new);
 
@@ -88,7 +88,6 @@ public class FogMod implements ModInitializer {
 				.customPortalBlock(ModBlocks.ENSHROUDED_PORTAL)
 				.registerPortal();
 
-		Console.writeln("Registering Events");
 
 		ModNetworking.registerReceivers();
 		ServerEntityEvents.ENTITY_LOAD.register(ServerEvents.getInstance());

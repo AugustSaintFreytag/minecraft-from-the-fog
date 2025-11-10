@@ -27,6 +27,8 @@ public class ModConfig extends Config {
     public static class BehaviorSection extends ConfigSection {
         @ValidatedFloat.Restrict(min = 1f,max = 10f) public float speedMultiplier = 1f;
         @ValidatedInt.Restrict(min = 1,max = 120) public int forgetTime = 5;
+        @ValidatedInt.Restrict(min = 1,max = 360) public int minAliveTime = 10;
+        @ValidatedInt.Restrict(min = 1,max = 360) public int maxAliveTime = 30;
     }
 
     public static class StatusEffectsSection extends ConfigSection {
