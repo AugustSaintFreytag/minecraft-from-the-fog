@@ -224,7 +224,6 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
         if (this.isReal()) {
             WorldComponent.get(world).setTheManId(this.getId());
-
             var nbtCompound = this.writeNbt(new NbtCompound());
 
             if (nbtCompound.contains(STATE_NBT_KEY)) {
@@ -238,13 +237,10 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
                         this.setState(TheManState.STALK);
                     }
                 } else {
-                    switch (RandomNum.next(0, 2)) {
-                        case 0:
-                            this.setState(TheManState.STARE);
-                            break;
-                        case 1:
-                            this.setState(TheManState.STALK);
-                            break;
+                    if (RandomNum.nextDouble() > 0.25) {
+                        this.setState(TheManState.STARE);
+                    } else {
+                        this.setState(TheManState.STALK);
                     }
                 }
             }
