@@ -45,7 +45,6 @@ public class ModClientEvents implements ClientTickEvents.EndTick {
     public DynamicSoundInstance chaseTheme;
     public PositionedSoundInstance horrorSound;
     public DynamicSoundInstance nightAmbience;
-    public DynamicSoundInstance caveAmbience;
 
     private boolean isChased = false;
     private boolean didChase = false;
@@ -56,7 +55,6 @@ public class ModClientEvents implements ClientTickEvents.EndTick {
         this.chaseTheme = DynamicSoundInstance.loop(ModSounds.MAN_CHASE,0f, 1f);
         this.horrorSound = PositionedSoundInstance.master(ModSounds.HORROR,1f,0.8f);
         this.nightAmbience = DynamicSoundInstance.master(ModSounds.NIGHT_AMBIENCE,0f,1f);
-        this.caveAmbience = DynamicSoundInstance.loop(ModSounds.CAVE_AMBIENCE,0f,1f);
     }
 
     public static ModClientEvents getInstance() {
@@ -76,9 +74,7 @@ public class ModClientEvents implements ClientTickEvents.EndTick {
         if (soundManager.isPlaying(this.nightAmbience)) {
             soundManager.stop(this.nightAmbience);
         }
-        if (soundManager.isPlaying(this.caveAmbience)) {
-            soundManager.stop(this.caveAmbience);
-        }
+        
         if (soundManager.isPlaying(this.chaseTheme)) {
             soundManager.stop(this.chaseTheme);
         }
@@ -161,23 +157,18 @@ public class ModClientEvents implements ClientTickEvents.EndTick {
             return;
         }
 
-        if (TheManEntity.isInAllowedDimension(client.world) && !this.isChased) {
+        if (WorldHelper.canSpawnInWorld(client.world) && !this.isChased) {
             if (WorldHelper.isOnSurface(client.world, client.player)) {
-                if (WorldHelper.isNight(client.world)) {
+                if (!WorldHelper.isDay(client.world)) {
                     this.nightAmbience.setVolume(GeometryHelper.interpolate(this.nightAmbience.getVolume(),NIGHT_AMBIENCE_VOLUME,FADE_IN_SPEED));
                 } else {
                     this.nightAmbience.setVolume(GeometryHelper.interpolate(this.nightAmbience.getVolume(),0f,FADE_OUT_SPEED));
                 }
-
-                this.caveAmbience.setVolume(GeometryHelper.interpolate(this.caveAmbience.getVolume(),0f,FADE_OUT_SPEED));
             } else {
                 this.nightAmbience.setVolume(GeometryHelper.interpolate(this.nightAmbience.getVolume(),0f,FADE_OUT_SPEED));
-
-                this.caveAmbience.setVolume(GeometryHelper.interpolate(this.caveAmbience.getVolume(),CAVE_AMBIENCE_VOLUME,FADE_IN_SPEED));
             }
         } else {
             this.nightAmbience.setVolume(0f);
-            this.caveAmbience.setVolume(0f);
         }
 
         if (this.chaseTheme.getVolume() <= 0 && soundManager.isPlaying(this.chaseTheme)) {
@@ -196,15 +187,6 @@ public class ModClientEvents implements ClientTickEvents.EndTick {
         if (this.nightAmbience.getVolume() > 0 && !soundManager.isPlaying(this.nightAmbience)) {
             this.nightAmbience.reset();
             soundManager.play(this.nightAmbience);
-        }
-
-        if (this.caveAmbience.getVolume() <= 0 && soundManager.isPlaying(this.caveAmbience)) {
-            soundManager.stop(this.caveAmbience);
-            this.caveAmbience.finish();
-        }
-        if (this.caveAmbience.getVolume() > 0 && !soundManager.isPlaying(this.caveAmbience)) {
-            this.caveAmbience.reset();
-            soundManager.play(this.caveAmbience);
         }
 
         if (--this.losCheckTicks <= 0L) {

@@ -313,6 +313,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         if (this.getState() == TheManState.CHASE) {
             return;
         }
+
         this.setState(TheManState.CHASE);
         this.playAlarmSound();
         TheManUtils.doLightning(this.getServerWorld(),this);
@@ -561,14 +562,6 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         return !(TheManUtils.manExists(serverWorld) || TheManUtils.hallucinationsExists(serverWorld));
     }
 
-    public static boolean isInAllowedDimension(World world) {
-        if (world.isClient()) {
-            return world.getRegistryKey() == World.OVERWORLD || world.getRegistryKey() == ModDimensions.ENSHROUDED_LEVEL_KEY;
-        }
-        return true;
-        //return FogMod.CONFIG.allowedDimensions.contains(world.getRegistryKey().getValue().toString()) || world.getRegistryKey() == ModDimensions.ENSHROUDED_LEVEL_KEY;
-    }
-
     @Override
     public boolean canSpawn(WorldAccess world, SpawnReason spawnReason) {
         return this.canSpawn(world);
@@ -611,9 +604,10 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
     @Override
     protected void dropInventory() {
-        if ((WorldHelper.isDay(this.getWorld()) && !FogMod.CONFIG.spawning.spawnInDay) || !this.isReal()) {
+        if (!WorldHelper.canSpawnInWorld(this.getWorld()) || !this.isReal()) {
             return;
         }
+
         this.dropStack(new ItemStack(Items.WITHER_ROSE,RandomNum.next(1,6)));
 
         if (this.getKilledCount() < 2) {
@@ -727,8 +721,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
             return true;
         }
 
-        if (WorldHelper.isNight(this.getWorld()) || FogMod.CONFIG.spawning.spawnInDay) {
-
+        if (WorldHelper.canSpawnInWorld(getWorld())) {
             Entity attacker = source.getAttacker();
 
             if (attacker instanceof LivingEntity livingEntity && !livingEntity.getMainHandStack().isOf(ModItems.CLAWS) && this.isReal()) {
@@ -991,6 +984,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
             this.despawn();
             return false;
         }
+        
         this.playAttackSound();
         this.playSlashSound();
 
@@ -1238,14 +1232,15 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         if (this.isAiDisabled()) return;
 
         this.pathfindingAgent.tick();
-
         this.attackTimer.tick();
         this.aliveTimer.tick();
+
         if (this.getState() == TheManState.CHASE && !WorldHelper.isBloodMoon(serverWorld) && !WorldHelper.isSuperBloodMoon(serverWorld)) {
             this.aliveTimer.resume();
         } else {
             this.aliveTimer.pause();
         }
+        
         this.hitboxUpdateTimer.tick();
         this.targetDetectTimer.tick();
         this.farAwayTimer.tick();
@@ -1253,6 +1248,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
         var oldSpeed = this.getAttributeBaseValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         var newSpeed = FogMod.CONFIG.statusEffects.giveSpeed ? SPEED : SPEED_NO_STATUS_EFFECT;
+        
         if (oldSpeed != newSpeed) {
             Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(newSpeed);
         }
@@ -1280,7 +1276,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
             this.setHealth(this.getHealth() - 4f);
         }
 
-        if (WorldHelper.isDay(serverWorld) && !FogMod.CONFIG.spawning.spawnInDay) {
+        if (!WorldHelper.canSpawnInWorld(serverWorld)) {
             this.despawn();
             return;
         }

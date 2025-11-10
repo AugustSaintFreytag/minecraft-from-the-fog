@@ -113,7 +113,7 @@ public class ParanoiaStatusEffect extends StatusEffect {
             this.doesEffects = true;
 
             if (entity instanceof PlayerEntity player) {
-                if (RandomNum.nextDouble() < HALLUCINATION_CHANCE * amplifier && (WorldHelper.isNight(entity.getWorld()) || FogMod.CONFIG.spawning.spawnInDay)) {
+                if (RandomNum.nextDouble() < HALLUCINATION_CHANCE * amplifier && WorldHelper.canSpawnInWorld(entity.getWorld())) {
                     this.spawnHallucinations(player);
                 } else {
                     this.playRandomSound(player);

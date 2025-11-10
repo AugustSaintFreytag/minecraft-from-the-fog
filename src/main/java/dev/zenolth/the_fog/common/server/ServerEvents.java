@@ -92,7 +92,9 @@ public class ServerEvents implements
         }
         var spawnPosition = WorldHelper.getRandomSpawnBehindDirection(world,player.getPos(), GeometryHelper.calculateDirection(0,player.getYaw(1.0f)));
         var entity = entityType.create(world);
+
         if (entity == null) return;
+        
         if (entity.canSpawn(world)) {
             entity.setPosition(spawnPosition);
             entity.setTarget(player);
@@ -119,9 +121,11 @@ public class ServerEvents implements
 
     public static void playCreepySoundAtRandomLocation(ServerWorld world) {
         var player = getRandomAlivePlayer(world);
+        
         if (player == null) {
             return;
         }
+
         var soundPosition = WorldHelper.getRandomSpawnBehindDirection(world,player.getPos(), GeometryHelper.calculateDirection(0,player.getYaw(1.0f)));
         playCreepySound(world,soundPosition.getX(),soundPosition.getY(),soundPosition.getZ());
     }
@@ -186,11 +190,7 @@ public class ServerEvents implements
             return;
         }
 
-        if (!TheManEntity.isInAllowedDimension(world)) {
-            return;
-        }
-
-        if (WorldHelper.isDay(world) && !FogMod.CONFIG.spawning.spawnInDay) {
+        if (!WorldHelper.canSpawnInWorld(world)) {
             return;
         }
 
@@ -222,10 +222,6 @@ public class ServerEvents implements
         }
 
         var spawnChance = FogMod.CONFIG.spawning.spawnChance * spawnChanceMul;
-
-        if (FogMod.CONFIG.spawning.spawnInDay && world.getRegistryKey() == World.OVERWORLD && WorldHelper.isDay(world)) {
-            spawnChance /= 2.0f;
-        }
 
         if (WorldHelper.isBloodMoon(world)) {
             spawnChance *= 4;
