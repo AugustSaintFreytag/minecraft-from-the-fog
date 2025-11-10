@@ -150,7 +150,7 @@ public class RenderEvents implements ClientLifecycleEvents.ClientStarted,HudRend
     public void onHudRender(DrawContext context, float tickDelta) {
         var client = MinecraftClient.getInstance();
 
-        if (client.player != null && client.world != null) {
+        if (FogMod.DEBUG && client.player != null && client.world != null) {
             if (WorldHelper.isOnSurface(client.world,client.player)) {
                 context.drawTextWithShadow(client.textRenderer,Text.of("On surface"),40,40,Colors.WHITE);
             } else {
