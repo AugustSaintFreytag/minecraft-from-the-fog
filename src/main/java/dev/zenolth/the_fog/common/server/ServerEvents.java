@@ -48,7 +48,7 @@ public class ServerEvents implements
     private static ServerEvents INSTANCE;
 
     public static final long CHECK_DAYS_TICKS = 40;
-    public static final float MAN_CREEPY_VOLUME = 5f;
+    public static final float MAN_CREEPY_VOLUME = 2.5f;
 
     public static final Predicate<? super PlayerEntity> VALID_PLAYER_PREDICATE = player -> player.isAlive() && !player.isSpectator() && !player.isCreative() && TheManEntity.canAttack(player,player.getWorld());
 
