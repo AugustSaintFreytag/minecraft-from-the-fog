@@ -3,6 +3,7 @@ package dev.zenolth.the_fog.common.entity.the_man;
 import dev.zenolth.the_fog.common.FogMod;
 import dev.zenolth.the_fog.common.animation.TheManAnimations;
 import dev.zenolth.the_fog.common.components.WorldComponent;
+import dev.zenolth.the_fog.common.config.ModConfig;
 import dev.zenolth.the_fog.common.damage_type.ModDamageTypes;
 import dev.zenolth.the_fog.common.data_tracker.TrackingData;
 import dev.zenolth.the_fog.common.entity.ModEntities;
@@ -186,7 +187,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         this.state = new TrackingData<>(this,STATE,TheManState.STARE.ordinal());
 
         this.attackTimer = new Timer(TimeHelper.secToTick(this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)),true,this::attemptAttack);
-        this.aliveTimer = new Timer(TimeHelper.secToTick(RandomNum.next(30,120)),this::despawn);
+        this.aliveTimer = new Timer(TimeHelper.secToTick(RandomNum.next(FogMod.CONFIG.behavior.minAliveTime, FogMod.CONFIG.behavior.maxAliveTime)),this::despawn);
         this.hitboxUpdateTimer = new Timer(10,true,this::updateHitbox);
         this.targetDetectTimer = new Timer(5,true,this::updateTarget);
         this.farAwayTimer = new Timer(TOO_FAR_AWAY_TICKS,this::teleportBehindTarget);
