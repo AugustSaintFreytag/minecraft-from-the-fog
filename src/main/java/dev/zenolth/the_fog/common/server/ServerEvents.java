@@ -152,7 +152,6 @@ public class ServerEvents implements
     @Override
     public void onWorldLoad(MinecraftServer server, ServerWorld world) {
         TheManEntity.resetKilledCount(world);
-        WorldComponent.get(world).setSpawnAttemptTicks(TimeHelper.secToTick(FogMod.CONFIG.spawning.timeBetweenSpawnAttempts));
 
         var men = world.getEntitiesByType(TypeFilter.instanceOf(TheManEntity.class), TheManEntity::isReal);
 
@@ -185,8 +184,9 @@ public class ServerEvents implements
 
     @Override
     public void onEndTick(ServerWorld world) {
-        if (WorldComponent.get(world).spawnAttemptTicks() > 0L) {
-            WorldComponent.get(world).setSpawnAttemptTicks(WorldComponent.get(world).spawnAttemptTicks() - 1);
+        long intervalTicks = Math.max(1L, TimeHelper.secToTick(FogMod.CONFIG.spawning.timeBetweenSpawnAttempts));
+
+        if (world.getTime() % intervalTicks != 0) {
             return;
         }
 
@@ -241,9 +241,7 @@ public class ServerEvents implements
             }
         }
 
-        // What the fuck is this bullshit
-        WorldComponent.get(world).setSpawnAttemptTicks(TimeHelper.secToTick(FogMod.CONFIG.spawning.timeBetweenSpawnAttempts));
-    }
+	}
 
     @Override
     public void onEndTick(MinecraftServer server) {
