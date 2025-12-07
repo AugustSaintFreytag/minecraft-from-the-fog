@@ -29,7 +29,6 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.pathing.*;
-import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
@@ -237,7 +236,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
                         this.setState(TheManState.STALK);
                     }
                 } else {
-                    if (RandomNum.nextDouble() > 0.25) {
+                    if (RandomNum.nextDouble() < FogMod.CONFIG.spawning.stareVsStalkChance) {
                         this.setState(TheManState.STARE);
                     } else {
                         this.setState(TheManState.STALK);
@@ -313,7 +312,18 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
         this.setState(TheManState.CHASE);
         this.playAlarmSound();
-        TheManUtils.doLightning(this.getServerWorld(),this);
+
+        if (FogMod.CONFIG.miscellaneous.summonCosmeticLightning) {
+            TheManUtils.spawnLightning(this.getServerWorld(),this);
+        }
+    }
+
+    public void startFlee() {
+        if (this.getState() == TheManState.FLEE) {
+            return;
+        }
+
+        this.setState(TheManState.FLEE);
     }
 
     /* Data trackers */
@@ -607,12 +617,14 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
         this.dropStack(new ItemStack(Items.WITHER_ROSE,RandomNum.next(1,6)));
 
-        if (this.getKilledCount() < 2) {
-            if (RandomNum.nextDouble() < 0.45) {
-                this.dropStack(new ItemStack(ModItems.CLAWS,1));
-            } else {
+        if (this.getKilledCount() >= 2) {
+            if (RandomNum.nextDouble() < 0.5) {
                 this.dropStack(new ItemStack(ModItems.TEAR_OF_THE_MAN,1));
             }
+        }
+
+        if (RandomNum.nextDouble() < 0.5) {
+            this.dropStack(new ItemStack(ModItems.CLAWS,1));
         }
     }
 
@@ -658,10 +670,12 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
     @Override
     public void onDeath(DamageSource damageSource) {
-        if (this.getWorld().isClient()) return;
+        if (this.getWorld().isClient()) {
+            return;
+        }
 
         if (!this.isReal()) {
-            this.despawn(!this.isParanoia());
+            this.despawn();
             return;
         }
 
@@ -714,6 +728,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
                 this.blockDamage(source);
                 return false;
             }
+
             this.damageShield(amount);
             return true;
         }
@@ -771,7 +786,6 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
                 if (RandomNum.nextDouble() < this.blockChance || RandomNum.nextDouble() < MathHelper.clamp(this.getLowHealthPercent(),0.1f,0.8f)) {
                     this.blockDamage(source,amount / 4f);
-
                     this.aliveTimer.setTicks(this.aliveTimer.ticks() - 20);
 
                     return false;
@@ -788,6 +802,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         if (!this.isReal()) {
             return;
         }
+
         this.addStatusEffect(TheManStatusEffects.REGENERATION);
     }
 
@@ -796,16 +811,16 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         super.remove(reason);
     }
 
-    public void despawn(boolean withLightning) {
-        WorldComponent.get(this.getWorld()).setTheManHealth(this.getHealth());
-        if (withLightning) {
-            TheManUtils.doLightning(this.getServerWorld(),this);
-        }
-        this.discard();
-    }
-
     public void despawn() {
-        this.despawn(true);
+        WorldComponent.get(this.getWorld()).setTheManHealth(this.getHealth());
+
+        TheManUtils.spawnDustCloud(this.getServerWorld(),this.getPos());
+
+        if (FogMod.CONFIG.miscellaneous.summonCosmeticLightning) {
+            TheManUtils.spawnLightning(this.getServerWorld(),this);
+        }
+
+        this.discard();
     }
 
     @Override
@@ -827,6 +842,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         this.playLungeSound();
         this.playLungeAttackSound();
         this.setVelocity(velX,velY,velZ);
+
         this.lunging.set(true);
     }
 
@@ -868,21 +884,28 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         return world.raycast(new BlockStateRaycastContext(origin,target, BlockStatePredicate.ANY)).getType() != HitResult.Type.MISS;
     }
 
-    public void chaseIfTooClose(double radius) {
+    public void chaseOrFleeIfTooClose(double radius) {
         if (this.getTarget() != null && this.getTarget().isInRange(this,radius)) {
             var hitResult = this.getWorld().raycast(new BlockStateRaycastContext(
                     this.getEyePos(),
                     this.getTarget().getEyePos(),
                     TheManPredicates.LOOK_BLOCK_STATE_PREDICATE
             ));
-            if (hitResult.getType() == HitResult.Type.MISS) {
+
+            if (hitResult.getType() != HitResult.Type.MISS) {
+                return;
+            }
+
+            if (getRandom().nextFloat() < 0.25) {
                 this.startChase();
+            } else {
+                this.startFlee();
             }
         }
     }
 
-    public void chaseIfTooClose() {
-        this.chaseIfTooClose(15);
+    public void chaseOrFleeIfTooClose() {
+        this.chaseOrFleeIfTooClose(12);
     }
 
     public void handleSurroundingBlocks() {
@@ -1434,8 +1457,10 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         var currentNode = this.currentPath.getNode(currentIndex);
         var nextNode = this.currentPath.getNode(nextIndex);
 
-        //Console.writeln("Current node height: %d",currentNode.getBlockPos().getY());
-        //Console.writeln("Next node height: %d",nextNode.getBlockPos().getY());
+        if (FogMod.DEBUG) {
+            Console.writeln("Current node height: %d",currentNode.getBlockPos().getY());
+            Console.writeln("Next node height: %d",nextNode.getBlockPos().getY());
+        }
 
         return (currentNode.type == ModPathNodeTypes.WALL_HUGGING || nextNode.type == ModPathNodeTypes.WALL_HUGGING) && nextNode.getBlockPos().getY() > currentNode.getBlockPos().getY();
     }
