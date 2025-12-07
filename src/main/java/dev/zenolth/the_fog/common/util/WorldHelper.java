@@ -9,6 +9,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.font.UnihexFont.Dimensions;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
@@ -235,24 +236,18 @@ public class WorldHelper {
         return (startX >= pos.getX() && startZ >= pos.getZ()) || (endX <= pos.getX() && endZ <= pos.getZ());
     }
 
+    public static boolean isInDarkness(WorldView world, BlockPos pos) {
+        return world.getLightLevel(pos) <= 15 - world.getAmbientDarkness();
+    }
+
     public static boolean isOnSurface(WorldView world, BlockPos pos) {
-        if (world.isSkyVisible(pos)) return true;
-
-        var biome = world.getBiome(pos);
-
-        if (biome.isIn(ConventionalBiomeTags.CAVES)) {
+        if (pos.getY() <= 50) {
             return false;
         }
 
-        var baseSkyLight = world.getLightLevel(LightType.SKY,pos) - world.getAmbientDarkness();
-
-        return baseSkyLight > 0;
+        return true;
     }
-
-    public static boolean isOnSurface(WorldView world, Entity entity) {
-        return isOnSurface(world, entity.getBlockPos());
-    }
-
+    
     public static boolean isInLightSource(WorldView world, BlockPos pos, Predicate<BlockState> lightSourcePredicate, Function<Integer,Integer> radiusFunction) {
         var lightLevel = world.getLightLevel(pos);
         if (lightLevel <= 15 - world.getAmbientDarkness()) {
