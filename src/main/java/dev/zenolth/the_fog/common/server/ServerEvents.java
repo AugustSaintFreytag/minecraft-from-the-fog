@@ -53,6 +53,7 @@ public class ServerEvents implements
     public static final Predicate<? super PlayerEntity> VALID_PLAYER_PREDICATE = player -> player.isAlive() && !player.isSpectator() && !player.isCreative() && TheManEntity.canAttack(player,player.getWorld());
 
     public long checkDaysTicks = CHECK_DAYS_TICKS;
+    public long nextSpawnAttemptTick = 0;
 
     private ServerEvents() {}
 
@@ -69,15 +70,19 @@ public class ServerEvents implements
         if (list.isEmpty()) {
             return null;
         }
+
         if (list.size() == 1) {
             return list.get(0);
         }
+        
         var playerCount = list.size() - 1;
         RandomCollection<ServerPlayerEntity> players = new RandomCollection<>();
+        
         for (var player : list) {
-            var weight = 1.0 - MathHelper.clamp((double) ((GroupInterface) player).the_fog_is_coming$getPlayersInGroupCount() / playerCount,0.2,0.8);
-            players.add(weight,player);
+            var weight = 1.0 - MathHelper.clamp((double) ((GroupInterface) player).the_fog_is_coming$getPlayersInGroupCount() / playerCount, 0.2, 0.8);
+            players.add(weight, player);
         }
+        
         return players.next();
     }
 
@@ -87,13 +92,17 @@ public class ServerEvents implements
 
     public static void spawnEntityAtRandomLocation(ServerWorld world, EntityType<? extends HostileEntity> entityType) {
         var player = getRandomAlivePlayer(world);
+
         if (player == null) {
             return;
         }
+        
         var spawnPosition = WorldHelper.getRandomSpawnBehindDirection(world,player.getPos(), GeometryHelper.calculateDirection(0,player.getYaw(1.0f)));
         var entity = entityType.create(world);
 
-        if (entity == null) return;
+        if (entity == null) {
+            return;
+        }
         
         if (entity.canSpawn(world)) {
             entity.setPosition(spawnPosition);
@@ -116,7 +125,7 @@ public class ServerEvents implements
             }
         } else {
             entity.discard();
-        }
+    }
     }
 
     public static void playCreepySoundAtRandomLocation(ServerWorld world) {
@@ -135,11 +144,6 @@ public class ServerEvents implements
         if (entity instanceof OnSpawnEntity m) {
             m.onSpawn(world);
         }
-        /*if (entity instanceof ServerPlayerEntity player) {
-            PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeDouble(world.getGameRules().get(ModGamerules.MAN_FOG_DENSITY_MOD).get());
-            ServerPlayNetworking.send(player, PacketTypes.UPDATE_FOG_DENSITY, buf);
-        }*/
     }
 
     @Override
@@ -153,18 +157,20 @@ public class ServerEvents implements
     public void onWorldLoad(MinecraftServer server, ServerWorld world) {
         TheManEntity.resetKilledCount(world);
 
-        var men = world.getEntitiesByType(TypeFilter.instanceOf(TheManEntity.class), TheManEntity::isReal);
+        var entities = world.getEntitiesByType(TypeFilter.instanceOf(TheManEntity.class), TheManEntity::isReal);
 
-        if (!men.isEmpty()) {
-            for (var theMan : men) {
-                if (theMan.isReal()) {
-                    WorldComponent.get(world).setTheManId(theMan.getId());
+        if (!entities.isEmpty()) {
+            for (var entity : entities) {
+                if (entity.isReal()) {
+                    WorldComponent.get(world).setTheManId(entity.getId());
                     break;
                 }
             }
         } else {
             WorldComponent.get(world).setTheManId(null);
         }
+
+        armNextSpawnAttemptTick(world);
     }
 
     @Override
@@ -184,11 +190,11 @@ public class ServerEvents implements
 
     @Override
     public void onEndTick(ServerWorld world) {
-        long intervalTicks = Math.max(1L, TimeHelper.secToTick(FogMod.CONFIG.spawning.timeBetweenSpawnAttempts));
-
-        if (world.getTime() % intervalTicks != 0) {
+        if (world.getTime() < nextSpawnAttemptTick) {
             return;
         }
+
+        armNextSpawnAttemptTick(world);
 
         if (!WorldHelper.canSpawnInWorld(world)) {
             return;
@@ -218,13 +224,13 @@ public class ServerEvents implements
         var spawnChanceMul = FogMod.CONFIG.spawning.spawnChanceScalesWithPlayerCount ? world.getPlayers(VALID_PLAYER_PREDICATE).size() : 1;
 
         if (world.getRegistryKey() == ModDimensions.ENSHROUDED_LEVEL_KEY) {
-            spawnChanceMul *= 2.5;
+            spawnChanceMul *= 2.5f;
         }
 
         var spawnChance = FogMod.CONFIG.spawning.spawnChance * spawnChanceMul;
 
         if (WorldHelper.isBloodMoon(world)) {
-            spawnChance *= 2.5;
+            spawnChance *= 2.5f;
         }
 
         if (WorldHelper.isSuperBloodMoon(world)) {
@@ -233,11 +239,9 @@ public class ServerEvents implements
 
         if (RandomNum.nextFloat() < spawnChance) {
             if (RandomNum.nextFloat() < FogMod.CONFIG.spawning.fakeSpawnChance) {
-                if (RandomNum.nextFloat() < 0.5) {
-                    playCreepySoundAtRandomLocation(world);
-                }
+                spawnEntityAtRandomLocation(world, ModEntities.THE_MAN);
             } else {
-                spawnEntityAtRandomLocation(world,ModEntities.THE_MAN);
+                playCreepySoundAtRandomLocation(world);
             }
         }
 
@@ -246,5 +250,15 @@ public class ServerEvents implements
     @Override
     public void onEndTick(MinecraftServer server) {
 
+    }
+
+    private void armNextSpawnAttemptTick(ServerWorld world) {
+        var configIntervalTicks = Math.max(1L, TimeHelper.secToTick(FogMod.CONFIG.spawning.timeBetweenSpawnAttempts));
+        var configIntervalVariance = Math.max(1, TimeHelper.secToTick(FogMod.CONFIG.spawning.spawnTimeVariance));
+
+        var intervalTickVariance = (long) world.getRandom().nextBetween(0, configIntervalVariance);
+        var intervalTicks = configIntervalTicks + intervalTickVariance;
+
+        nextSpawnAttemptTick = world.getTime() + intervalTicks;
     }
 }
