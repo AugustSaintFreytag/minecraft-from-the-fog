@@ -37,7 +37,7 @@ public class WorldHelper {
 
     public static boolean isDay(World world) {
         float skyAngle = world.getSkyAngle(1.0F);
-        return skyAngle < 0.3F || skyAngle > 0.7F;
+        return skyAngle < 0.35F || skyAngle > 0.675F;
     }
 
     public static boolean canSpawnInWorld(World world) {
