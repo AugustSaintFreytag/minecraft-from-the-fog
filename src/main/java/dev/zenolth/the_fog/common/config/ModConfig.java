@@ -12,12 +12,19 @@ import org.jetbrains.annotations.NotNull;
 
 public class ModConfig extends Config {
     public static class SpawningSection extends ConfigSection {
-        @ValidatedFloat.Restrict(min = 0f,max = 1f) public float spawnChance = 0.33f;
-        @ValidatedFloat.Restrict(min = 0f,max = 1f) public float fakeSpawnChance = 0.6f;
-        @ValidatedFloat.Restrict(min = 0f,max = 1f) public float mimicSpawnChance = 0.6f;
+        @ValidatedFloat.Restrict(min = 0f,max = 1f) public float spawnChance = 0.1f;
+        @ValidatedFloat.Restrict(min = 0f,max = 1f) public float fakeSpawnChance = 0.5f;
+        @ValidatedFloat.Restrict(min = 0f,max = 1f) public float hallucinationSpawnChance = 0.5f;
+        @ValidatedFloat.Restrict(min = 0f,max = 1f) public float mimicSpawnChance = 0.5f;
+        @ValidatedFloat.Restrict(min = 0f,max = 1f) public float stareVsStalkChance = 0.75f;
+        
         public boolean spawnChanceScalesWithPlayerCount = false;
-        @ValidatedFloat.Restrict(min = 0.1f,max = 120f) public float timeBetweenSpawnAttempts = 10f;
+        
+        @ValidatedInt.Restrict(min = 1,max = 1200) public int timeBetweenSpawnAttempts = 60;
+        @ValidatedInt.Restrict(min = 1,max = 1200) public int spawnTimeVariance = 30;
+        
         public boolean spawnInDay = false;
+        
         @ValidatedInt.Restrict(min = 20,max = 120) public int minSpawnRange = 20;
         @ValidatedInt.Restrict(min = 20,max = 120) public int maxSpawnRange = 60;
         @ValidatedInt.Restrict(min = 1,max = 10) public int maxKillCount = 5;
