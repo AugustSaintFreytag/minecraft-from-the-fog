@@ -179,7 +179,7 @@ public class MimicEntity extends HostileEntity implements StateMachineEntity<Mim
                 }
             }
 
-            this.chatCooldown = RandomNum.next(MIN_CHAT_COOLDOWN,MAX_CHAT_COOLDOWN);
+            this.chatCooldown = RandomNum.next(MIN_CHAT_COOLDOWN, MAX_CHAT_COOLDOWN);
         }
     }
 
@@ -307,14 +307,6 @@ public class MimicEntity extends HostileEntity implements StateMachineEntity<Mim
 
     private static @NotNull List<UUID> getEveryPlayer(ServerWorld serverWorld) {
         List<UUID> uuids = new ArrayList<>();
-
-        /*var userCache = serverWorld.getServer().getUserCache();
-        if (userCache != null) {
-            serverWorld.getServer().getPlayerNames();
-            for (var entry : userCache.load()) {
-                uuids.add(entry.getProfile().getId());
-            }
-        }*/
 
         for (var player : serverWorld.getServer().getPlayerManager().getPlayerList()) {
             if (uuids.contains(player.getGameProfile().getId())) continue;

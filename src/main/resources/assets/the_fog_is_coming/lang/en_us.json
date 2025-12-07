@@ -3,57 +3,59 @@
   "block.the_fog_is_coming.enshrouded_portal": "Enshrouded Portal",
   "block.the_fog_is_coming.erebus_lantern": "Erebus Lantern",
 
-  "item.the_fog_is_coming.tear_of_the_man": "Tear Of §kThe Man§r",
+  "item.the_fog_is_coming.tear_of_the_man": "Tear of §kThe Creature§r",
   "item.the_fog_is_coming.erebus_orb": "Erebus Orb",
-  "item.the_fog_is_coming.fogman_spawn_egg": "§kThe Man§r Spawn Egg",
-  "item.the_fog_is_coming.mans_claws": "The Man's claws",
+  "item.the_fog_is_coming.fogman_spawn_egg": "§kThe Creature§r Spawn Egg",
+  "item.the_fog_is_coming.fogman_trippy_spawn_egg": "§kThe Creature§r Spawn Egg (Trippy)",
+  "item.the_fog_is_coming.mans_claws": "Claw of §kThe Creature§r",
 
-  "entity.the_fog_is_coming.the_man": "§kThe Man§r",
-  "entity.the_fog_is_coming.the_man_hallucination": "§kThe Man§r",
-  "entity.the_fog_is_coming.the_man_paranoia": "The Man?",
+  "entity.the_fog_is_coming.the_man": "§kThe Creature§r",
+  "entity.the_fog_is_coming.the_man_hallucination": "§kThe Creature§r",
+  "entity.the_fog_is_coming.the_man_paranoia": "???",
+  "entity.the_fog_is_coming.mimic": "§kYou§r",
 
   "effect.the_fog_is_coming.paranoia": "Paranoia",
-  "effect.the_fog_is_coming.paranoia.description": "Given to players after §kThe Man§r kills someone in his chase state.",
+  "effect.the_fog_is_coming.paranoia.description": "Given to players after §kThe Creature§r kills someone in his chase state.",
 
-  "subtitles.the_fog_is_coming.man_alarm": "§kThe Man§r alarms",
-  "subtitles.the_fog_is_coming.man_pain": "§kThe Man§r hurts",
-  "subtitles.the_fog_is_coming.man_attack": "§kThe Man§r attacks",
-  "subtitles.the_fog_is_coming.man_spit": "§kThe Man§r spits acid",
-  "subtitles.the_fog_is_coming.man_slash": "§kThe Man§r slashes",
-  "subtitles.the_fog_is_coming.man_spot": "§kThe Man§r spots someone",
-  "subtitles.the_fog_is_coming.man_idlecalm": "§kThe Man§r growls",
-  "subtitles.the_fog_is_coming.man_death": "§kThe Man§r dies",
-  "subtitles.the_fog_is_coming.man_lunge": "§kThe Man§r lunges",
+  "subtitles.the_fog_is_coming.man_alarm": "§kThe Creature§r alarms",
+  "subtitles.the_fog_is_coming.man_pain": "§kThe Creature§r hurts",
+  "subtitles.the_fog_is_coming.man_attack": "§kThe Creature§r attacks",
+  "subtitles.the_fog_is_coming.man_spit": "§kThe Creature§r spits acid",
+  "subtitles.the_fog_is_coming.man_slash": "§kThe Creature§r slashes",
+  "subtitles.the_fog_is_coming.man_spot": "§kThe Creature§r spots someone",
+  "subtitles.the_fog_is_coming.man_idlecalm": "§kThe Creature§r growls",
+  "subtitles.the_fog_is_coming.man_death": "§kThe Creature§r dies",
+  "subtitles.the_fog_is_coming.man_lunge": "§kThe Creature§r lunges",
   "subtitles.the_fog_is_coming.man_creepy": "...",
 
-  "subtitles.the_fog_is_coming.shield_break": "§kThe Man§r's shield breaks",
+  "subtitles.the_fog_is_coming.shield_break": "§kThe Creature§r's shield breaks",
 
-  "yacl3.config.the_fog_is_coming:config.category.default": "Mod behavior",
+  "yacl3.config.the_fog_is_coming:config.category.default": "Mod",
   "yacl3.config.the_fog_is_coming:config.category.default.group.spawning": "Spawning",
-  "yacl3.config.the_fog_is_coming:config.category.default.group.behavior": "The Man behavior",
+  "yacl3.config.the_fog_is_coming:config.category.default.group.behavior": "Behavior",
   "yacl3.config.the_fog_is_coming:config.category.default.group.status_effect": "Status Effects",
   "yacl3.config.the_fog_is_coming:config.category.default.group.griefing": "Griefing",
   "yacl3.config.the_fog_is_coming:config.category.default.group.misc": "Miscellaneous",
 
   "yacl3.config.the_fog_is_coming:config.allowedDimensions": "Allowed Dimensions",
 
-  "gamerule.manSpawnChanceScalesWithPlayerCount": "Should The Man's spawn chance scale by amount of players",
-  "gamerule.manSpawnChance": "The Man's spawn chance",
-  "gamerule.manFakeSpawnChance": "Chance to play a sound instead of spawning The Man",
-  "gamerule.manSpawnCooldown": "Time between The Man's spawn opportunities",
+  "gamerule.manSpawnChanceScalesWithPlayerCount": "Should The Creature's spawn chance scale by amount of players",
+  "gamerule.manSpawnChance": "The Creature's spawn chance",
+  "gamerule.manFakeSpawnChance": "Chance to play a sound instead of spawning The Creature",
+  "gamerule.manSpawnCooldown": "Time between The Creature's spawn opportunities",
 
-  "gamerule.manCanSpawnInDay": "Should The Man spawn when it's day",
+  "gamerule.manCanSpawnInDay": "Should The Creature spawn when it's day",
 
-  "gamerule.manShouldGiveDarknessEffect": "Should The Man give Darkness effect to close players",
-  "gamerule.manShouldGiveSpeedEffect": "Should The Man give Speed effect to close players",
+  "gamerule.manShouldGiveDarknessEffect": "Should The Creature give Darkness effect to close players",
+  "gamerule.manShouldGiveSpeedEffect": "Should The Creature give Speed effect to close players",
 
-  "gamerule.manMinSpawnRange": "The Man's minimal spawning range",
-  "gamerule.manMaxSpawnRange": "The Man's maximum spawning range",
-  "gamerule.manCanSpawnInAnyDimension": "Allow The Man to spawn in any dimension",
-  
-  "gamerule.manShouldBreakGlass": "Is The Man allowed to break glass",
-  "gamerule.manShouldBreakLightSources": "Is The Man allowed to break light sources",
+  "gamerule.manMinSpawnRange": "The Creature's minimal spawning range",
+  "gamerule.manMaxSpawnRange": "The Creature's maximum spawning range",
+  "gamerule.manCanSpawnInAnyDimension": "Allow The Creature to spawn in any dimension",
+
+  "gamerule.manShouldBreakGlass": "Is The Creature allowed to break glass",
+  "gamerule.manShouldBreakLightSources": "Is The Creature allowed to break light sources",
 
   "gamerule.manShouldHungerBeCapped": "Should Player's hunger be capped at 8 when chased",
-  "gamerule.manCanSummonLightning": "Can The Man summon cosmetic lightnings"
+  "gamerule.manCanSummonLightning": "Can The Creature summon cosmetic lightnings"
 }

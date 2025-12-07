@@ -1,7 +1,6 @@
 package dev.zenolth.the_fog.common.components;
 
 import dev.zenolth.the_fog.common.entity.the_man.TheManEntity;
-import dev.zenolth.the_fog.common.util.TimeHelper;
 import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.nbt.NbtCompound;
@@ -18,7 +17,6 @@ public class WorldComponent implements AutoSyncedComponent {
     public static final String THE_MAN_KILL_COUNT = "theManKillCount";
     public static final String THE_MAN_ENTITY_ID = "theManEntityId";
     public static final String THE_MAN_HEALTH = "theManHealth";
-    public static final String THE_MAN_SPAWN_ATTEMPT_TICKS = "theManSpawnAttemptTicks";
 
     private final World world;
 
@@ -26,7 +24,6 @@ public class WorldComponent implements AutoSyncedComponent {
     private int killCount = 0;
     @Nullable private Integer theManId;
     private float theManHealth = (float) TheManEntity.createAttributes().build().getValue(EntityAttributes.GENERIC_MAX_HEALTH);
-    private long spawnAttemptTicks = TimeHelper.secToTick(15.0);
 
     public WorldComponent(World world) {
         this.world = world;
@@ -77,13 +74,6 @@ public class WorldComponent implements AutoSyncedComponent {
         sync(this.getWorld());
     }
 
-    public void setSpawnAttemptTicks(long value) {
-        this.spawnAttemptTicks = value;
-        sync(this.getWorld());
-    }
-
-    public long spawnAttemptTicks() { return this.spawnAttemptTicks; }
-
     public World getWorld() { return this.world; }
 
     @Override
@@ -94,7 +84,6 @@ public class WorldComponent implements AutoSyncedComponent {
             this.theManId = tag.getInt(THE_MAN_ENTITY_ID);
         }
         this.theManHealth = tag.getFloat(THE_MAN_HEALTH);
-        this.spawnAttemptTicks = tag.getLong(THE_MAN_SPAWN_ATTEMPT_TICKS);
     }
 
     @Override
@@ -109,6 +98,5 @@ public class WorldComponent implements AutoSyncedComponent {
             }
         }
         tag.putFloat(THE_MAN_HEALTH,this.theManHealth);
-        tag.putLong(THE_MAN_SPAWN_ATTEMPT_TICKS,this.spawnAttemptTicks);
     }
 }

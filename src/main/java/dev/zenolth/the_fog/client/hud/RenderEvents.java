@@ -151,10 +151,10 @@ public class RenderEvents implements ClientLifecycleEvents.ClientStarted,HudRend
         var client = MinecraftClient.getInstance();
 
         if (FogMod.DEBUG && client.player != null && client.world != null) {
-            if (WorldHelper.isOnSurface(client.world,client.player)) {
-                context.drawTextWithShadow(client.textRenderer,Text.of("On surface"),40,40,Colors.WHITE);
+            if (WorldHelper.isInDarkness(client.world, client.player.getBlockPos())) {
+                context.drawTextWithShadow(client.textRenderer,Text.of("In darkness"),40,40,Colors.WHITE);
             } else {
-                context.drawTextWithShadow(client.textRenderer,Text.of("In cave/Not on surface"),40,40,Colors.WHITE);
+                context.drawTextWithShadow(client.textRenderer,Text.of("Not in darkness"),40,40,Colors.WHITE);
             }
         }
 

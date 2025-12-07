@@ -26,7 +26,7 @@ public class StalkState extends AbstractState<TheManEntity, TheManState> {
         }
 
         if (this.mob.isLookedAt()) {
-            this.mob.chaseIfTooClose(30);
+            this.mob.chaseOrFleeIfTooClose(30);
         }
 
         var dir = Vec3d.fromPolar(0f,target.getYaw());

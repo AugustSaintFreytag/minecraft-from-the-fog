@@ -21,7 +21,7 @@ public class FleeState extends AbstractState<TheManEntity, TheManState> {
             return;
         }
 
-        this.mob.chaseIfTooClose();
+        this.mob.chaseOrFleeIfTooClose();
 
         this.mob.getLookControl().lookAt(target,30f,30f);
 

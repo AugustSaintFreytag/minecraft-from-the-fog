@@ -34,11 +34,10 @@ public class ModClientEvents implements ClientTickEvents.EndTick {
     public static float CHASE_VOLUME = 1.4f;
     public static float CHASE_FADE_OUT_SPEED = 0.07f;
 
-    public static float NIGHT_AMBIENCE_VOLUME = 0.15f;
-    public static float CAVE_AMBIENCE_VOLUME = 0.15f;
+    public static float NIGHT_AMBIENCE_VOLUME = 0.5f;
 
-    public static float FADE_IN_SPEED = 0.1f;
-    public static float FADE_OUT_SPEED = 0.1f;
+    public static float FADE_IN_SPEED = 0.05f;
+    public static float FADE_OUT_SPEED = 0.05f;
 
     private boolean thickFog = false;
 
@@ -52,9 +51,9 @@ public class ModClientEvents implements ClientTickEvents.EndTick {
     private long losCheckTicks = LOS_CHECK_TICKS;
 
     private ModClientEvents() {
-        this.chaseTheme = DynamicSoundInstance.loop(ModSounds.MAN_CHASE,0f, 1f);
-        this.horrorSound = PositionedSoundInstance.master(ModSounds.HORROR,1f,0.8f);
-        this.nightAmbience = DynamicSoundInstance.master(ModSounds.NIGHT_AMBIENCE,0f,1f);
+        this.chaseTheme = DynamicSoundInstance.loop(ModSounds.MAN_CHASE, 0f, 1f);
+        this.horrorSound = PositionedSoundInstance.master(ModSounds.HORROR, 1f, 0.8f);
+        this.nightAmbience = DynamicSoundInstance.ambient(ModSounds.NIGHT_AMBIENCE, 0f, 1f);
     }
 
     public static ModClientEvents getInstance() {
@@ -95,8 +94,6 @@ public class ModClientEvents implements ClientTickEvents.EndTick {
         }
 
         var camera = client.gameRenderer.getCamera();
-        //var cameraEntity = client.getCameraEntity();
-
         var cameraLookVector = GeometryHelper.calculateDirection(camera.getPitch(),camera.getYaw()).normalize();
 
         BlockHitResult result = client.world.raycast(
@@ -157,19 +154,10 @@ public class ModClientEvents implements ClientTickEvents.EndTick {
             return;
         }
 
-        if (WorldHelper.canSpawnInWorld(client.world) && !this.isChased) {
-            if (WorldHelper.isOnSurface(client.world, client.player)) {
-                if (!WorldHelper.isDay(client.world)) {
-                    this.nightAmbience.setVolume(GeometryHelper.interpolate(this.nightAmbience.getVolume(),NIGHT_AMBIENCE_VOLUME,FADE_IN_SPEED));
-                } else {
-                    this.nightAmbience.setVolume(GeometryHelper.interpolate(this.nightAmbience.getVolume(),0f,FADE_OUT_SPEED));
-                }
-            } else {
-                this.nightAmbience.setVolume(GeometryHelper.interpolate(this.nightAmbience.getVolume(),0f,FADE_OUT_SPEED));
-            }
-        } else {
-            this.nightAmbience.setVolume(0f);
-        }
+        boolean canPlayNightAmbience = WorldHelper.canSpawnInWorld(client.world) && !this.isChased && WorldHelper.isInDarkness(client.world, client.player.getBlockPos());
+        float targetNightVolume = canPlayNightAmbience ? NIGHT_AMBIENCE_VOLUME : 0f;
+        float fadeSpeed = targetNightVolume > this.nightAmbience.getVolume() ? FADE_IN_SPEED : FADE_OUT_SPEED;
+        this.nightAmbience.setVolume(GeometryHelper.interpolate(this.nightAmbience.getVolume(),targetNightVolume,fadeSpeed));
 
         if (this.chaseTheme.getVolume() <= 0 && soundManager.isPlaying(this.chaseTheme)) {
             soundManager.stop(this.chaseTheme);
