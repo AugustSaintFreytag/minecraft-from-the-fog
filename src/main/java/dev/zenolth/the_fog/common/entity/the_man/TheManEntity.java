@@ -165,6 +165,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
     private final HashSet<UUID> playersWithLineOfSight = new HashSet<>();
     private final HashSet<UUID> targetablePlayers = new HashSet<>();
+    private final Map<UUID, Integer> playerSightings = new HashMap<>();
     @Nullable private Vec3d lastKnownTargetPosition;
 
     // Hitbox size
@@ -228,15 +229,17 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
             if (nbtCompound.contains(STATE_NBT_KEY)) {
                 this.setState(TheManState.values()[nbtCompound.getInt(STATE_NBT_KEY)]);
             } else {
+                var shouldStareNotStalk = RandomNum.nextDouble() < FogMod.CONFIG.spawning.stareVsStalkChance;
+
                 if (this.getTarget() != null) {
                     BlockHitResult hitResult = world.raycast(new BlockStateRaycastContext(this.getEyePos(), this.getTarget().getEyePos(), TheManPredicates.BLOCK_STATE_PREDICATE));
-                    if (hitResult.getType() == HitResult.Type.MISS) {
+                    if (shouldStareNotStalk || hitResult.getType() == HitResult.Type.MISS) {
                         this.setState(TheManState.STARE);
                     } else {
                         this.setState(TheManState.STALK);
                     }
                 } else {
-                    if (RandomNum.nextDouble() < FogMod.CONFIG.spawning.stareVsStalkChance) {
+                    if (shouldStareNotStalk) {
                         this.setState(TheManState.STARE);
                     } else {
                         this.setState(TheManState.STALK);
@@ -308,6 +311,14 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
     public void startChase() {
         if (this.getState() == TheManState.CHASE) {
             return;
+        }
+
+        if (this.isReal()) {
+            var target = this.getTarget();
+            if (target != null && !this.hasSeenEnough(target)) {
+                this.startFlee();
+                return;
+            }
         }
 
         this.setState(TheManState.CHASE);
@@ -1002,6 +1013,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
     public boolean tryAttack(Entity target) {
         if (!this.isReal()) {
             this.despawn();
+            
             return false;
         }
         
@@ -1011,6 +1023,7 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         if (this.getState() == TheManState.STALK || this.lunging.get()) {
             target.damage(this.getDamageSources().create(DamageTypes.MOB_ATTACK,this),20f);
             this.startChase();
+            
             return true;
         }
 
@@ -1190,9 +1203,42 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
         return canAttack(livingEntity,this.getWorld());
     }
 
+    private int getRequiredSightings() {
+        return Math.max(0, FogMod.CONFIG.behavior.sightingsBeforeChase);
+    }
+
+    private int getPlayerSightings(UUID playerId) {
+        return this.playerSightings.getOrDefault(playerId, 0);
+    }
+
+    public boolean hasSeenEnough(LivingEntity target) {
+        if (!(target instanceof PlayerEntity player)) {
+            return true;
+        }
+        return this.hasSeenEnough(player.getUuid());
+    }
+
+    public boolean hasSeenEnough(PlayerEntity player) {
+        return this.hasSeenEnough(player.getUuid());
+    }
+
+    private boolean hasSeenEnough(UUID playerId) {
+        var required = this.getRequiredSightings();
+        if (required <= 0) {
+            return true;
+        }
+        return this.getPlayerSightings(playerId) >= required;
+    }
+
+    private void incrementSightings(UUID playerId) {
+        this.playerSightings.merge(playerId, 1, Integer::sum);
+    }
+
     public LivingEntity getClosestPlayer() {
+        double closestEligibleDistance = -1.0;
+        LivingEntity eligibleTarget = null;
         double closestDistance = -1.0;
-        LivingEntity target = null;
+        LivingEntity fallbackTarget = null;
 
         for (var player : this.getWorld().getPlayers()) {
             if (!TheManPredicates.TARGET_PREDICATE.test(player)) continue;
@@ -1204,13 +1250,18 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
             double distance = player.squaredDistanceTo(this.getX(),this.getY(),this.getZ());
 
+            if (this.hasSeenEnough(player) && (closestEligibleDistance == -1.0 || distance < closestEligibleDistance)) {
+                closestEligibleDistance = distance;
+                eligibleTarget = player;
+            }
+
             if (closestDistance == -1.0 || distance < closestDistance) {
                 closestDistance = distance;
-                target = player;
+                fallbackTarget = player;
             }
         }
 
-        return target;
+        return eligibleTarget != null ? eligibleTarget : fallbackTarget;
     }
 
     public void updateTarget() {
@@ -1592,6 +1643,17 @@ public class TheManEntity extends HostileEntity implements GeoEntity, StateMachi
 
     public static void setDayKilled(World world, long day) {
         WorldComponent.get(world).setDayKilled(day);
+    }
+
+    @Override
+    public void setPlayerLOS(UUID uuid, boolean hasLineOfSight) {
+        boolean didHaveLineOfSight = this.playersWithLineOfSight.contains(uuid);
+        MonitorPlayerLineOfSight.super.setPlayerLOS(uuid, hasLineOfSight);
+        
+        if (hasLineOfSight && !didHaveLineOfSight) {
+            this.incrementSightings(uuid);
+            FogMod.LOGGER.info("Registered line of sight for player " + uuid + ". Total sightings: " + this.getPlayerSightings(uuid) + "/" + this.getRequiredSightings());
+        }
     }
 
     @Override
