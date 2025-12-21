@@ -51,7 +51,7 @@ public class FogMod implements ModInitializer {
 
 	@Nullable
 	public static TheManEntity getTheMan(World world) {
-		var id = WorldComponent.get(world).theManId();
+		var id = WorldComponent.get(world).getEntityId();
 		if (id.isEmpty()) return null;
 
 		var entity = world.getEntityById(id.get());

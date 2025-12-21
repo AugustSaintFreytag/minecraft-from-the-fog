@@ -114,11 +114,11 @@ public class ServerEvents implements
                     playCreepySound(world,spawnPosition.getX(),spawnPosition.getY(),spawnPosition.getZ());
                 }
 
-                var newHealth = WorldComponent.get(world).theManHealth();
+                var newHealth = WorldComponent.get(world).getEntityHealth();
 
                 if (newHealth <= 0) {
-                    WorldComponent.get(world).setTheManHealth((float) TheManEntity.createAttributes().build().getValue(EntityAttributes.GENERIC_MAX_HEALTH));
-                    newHealth = WorldComponent.get(world).theManHealth();
+                    WorldComponent.get(world).setEntityHealth((float) TheManEntity.createAttributes().build().getValue(EntityAttributes.GENERIC_MAX_HEALTH));
+                    newHealth = WorldComponent.get(world).getEntityHealth();
                 }
 
                 theMan.setHealth(newHealth);
@@ -149,7 +149,7 @@ public class ServerEvents implements
     @Override
     public void onUnload(Entity entity, ServerWorld world) {
         if (entity instanceof TheManEntity) {
-            WorldComponent.get(world).setTheManId(null);
+            WorldComponent.get(world).setEntityId(null);
         }
     }
 
@@ -162,12 +162,12 @@ public class ServerEvents implements
         if (!entities.isEmpty()) {
             for (var entity : entities) {
                 if (entity.isReal()) {
-                    WorldComponent.get(world).setTheManId(entity.getId());
+                    WorldComponent.get(world).setEntityId(entity.getId());
                     break;
                 }
             }
         } else {
-            WorldComponent.get(world).setTheManId(null);
+            WorldComponent.get(world).setEntityId(null);
         }
 
         armNextSpawnAttemptTick(world);
